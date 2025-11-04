@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Job Portal — Admin Manage Applicants</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .table-scroll { max-height: 48vh; overflow: auto; }
+    th, td { white-space: nowrap; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 text-white">
+
+  <!-- Header -->
+  <header class="text-center py-6 bg-black bg-opacity-30 backdrop-blur-md shadow-md">
+    <h1 class="text-4xl font-bold text-cyan-400">Smart Job Portal</h1>
+    <p class="text-gray-300 mt-2">Apply for jobs — Admin can view & manage applicants</p>
+  </header>
+
+  <!-- Nav -->
+  <nav class="flex justify-center gap-6 py-4 bg-black bg-opacity-20">
+    <button class="nav-btn hover:text-cyan-400 transition" data-target="home">Home</button>
+    <button class="nav-btn hover:text-cyan-400 transition" data-target="jobs">Jobs</button>
+    <button class="nav-btn hover:text-cyan-400 transition" data-target="apply">Apply</button>
+    <button class="nav-btn hover:text-cyan-400 transition" data-target="admin">Admin</button>
+  </nav>
+
+  <main class="p-6 max-w-6xl mx-auto">
+
+    <!-- Home -->
+    <section id="home" class="section">
+      <div class="text-center">
+        <h2 class="text-3xl font-semibold text-cyan-300 mb-3">Welcome</h2>
+        <p class="text-gray-300">Browse jobs, apply, and admins can inspect or delete applicants per job.</p>
+      </div>
+    </section>
+
+    <!-- Jobs -->
+    <section id="jobs" class="section hidden mt-6">
+      <h2 class="text-2xl mb-4 text-cyan-300 font-semibold">Available Jobs</h2>
+      <div id="jobList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- Apply -->
+    <section id="apply" class="section hidden mt-6">
+      <h2 class="text-2xl mb-4 text-cyan-300 font-semibold">Apply for a Job</h2>
+      <form id="applyForm" class="space-y-3 bg-gray-800 p-6 rounded-lg max-w-lg">
+        <label class="block text-sm text-gray-300">Full Name <span class="text-red-400">*</span></label>
+        <input id="name" type="text" required class="w-full p-2 rounded bg-gray-700 text-white" placeholder="Your full name">
+
+        <label class="block text-sm text-gray-300">Email <span class="text-red-400">*</span></label>
+        <input id="email" type="email" required class="w-full p-2 rounded bg-gray-700 text-white" placeholder="you@example.com">
+
+        <label class="block text-sm text-gray-300">Select Job <span class="text-red-400">*</span></label>
+        <select id="jobSelect" required class="w-full p-2 rounded bg-gray-700 text-white">
+          <option value="">-- Choose a job --</option>
+        </select>
+
+        <label class="block text-sm text-gray-300">Years of Experience <span class="text-red-400">*</span></label>
+        <input id="experience" type="number" required min="0" class="w-full p-2 rounded bg-gray-700 text-white" placeholder="e.g., 2">
+
+        <label class="block text-sm text-gray-300">Message / Cover Note</label>
+        <textarea id="message" rows="4" class="w-full p-2 rounded bg-gray-700 text-white" placeholder="Tell us why you're a good fit (optional)"></textarea>
+
+        <div class="flex gap-2">
+          <button type="submit" class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded font-semibold">Submit Application</button>
+          <button type="button" id="resetApply" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Admin -->
+    <section id="admin" class="section hidden mt-6">
+      <div id="adminLogin" class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg text-center">
+        <h3 class="text-2xl mb-3 text-cyan-400">Admin Login</h3>
+        <input id="adminPass" type="password" placeholder="Enter admin password" class="w-full p-2 mb-3 rounded bg-gray-700 text-white">
+        <button id="adminLoginBtn" class="bg-cyan-500 hover:bg-cyan-600 w-full py-2 rounded font-semibold">Login</button>
+        <p class="text-gray-400 text-sm mt-2">Hint: password is <span class="text-cyan-400">admin</span></p>
+      </div>
+
+      <div id="adminDashboard" class="hidden max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl text-cyan-400">Admin Dashboard</h2>
+          <div class="flex gap-2">
+            <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded">Logout</button>
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-gray-800 p-4 rounded text-center">
+            <h4 class="text-cyan-400 text-lg">Total Jobs</h4>
+            <p id="totalJobs" class="text-2xl font-bold">0</p>
+          </div>
+          <div class="bg-gray-800 p-4 rounded text-center">
+            <h4 class="text-cyan-400 text-lg">Total Applicants</h4>
+            <p id="totalApplicants" class="text-2xl font-bold">0</p>
+          </div>
+        </div>
+
+        <h3 class="text-xl mb-2">Jobs — click a job to see applicants</h3>
+        <div id="adminJobs" class="space-y-3"></div>
+
+        <div id="applicantList" class="hidden mt-6 bg-gray-800 p-4 rounded-lg table-scroll">
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="text-xl text-cyan-400">Applicants for: <span id="selectedJobName"></span></h3>
+            <div>
+              <button id="deleteSelected" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm mr-2">Delete Selected</button>
+              <button id="closeApplicants" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">Close</button>
+            </div>
+          </div>
+
+          <table class="w-full text-left">
+            <thead class="bg-gray-700 sticky top-0">
+              <tr>
+                <th class="p-2"><input type="checkbox" id="selectAll"></th>
+                <th class="p-2">Name</th>
+                <th class="p-2">Email</th>
+                <th class="p-2">Job</th>
+                <th class="p-2">Experience (Years)</th>
+                <th class="p-2">Message</th>
+                <th class="p-2">Applied At</th>
+                <th class="p-2">Action</th>
+              </tr>
+            </thead>
+            <tbody id="applicantsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const JOBS = [
+      { id: 'frontend', title: "Java Developer", company: "TechNova", location: "Chennai", salary: "₹6 LPA" },
+      { id: 'backend', title: "Dotnet Developer", company: "CodeWorks", location: "Bangalore", salary: "₹8 LPA" },
+      { id: 'uiux', title: "Fullstack Developer", company: "DesignPro", location: "Pune", salary: "₹5 LPA" },
+      { id: 'tester', title: "UI Developer", company: "QA Labs", location: "Hyderabad", salary: "₹4.5 LPA" },
+      { id: 'data', title: "Data Analyst", company: "DataMind", location: "Delhi", salary: "₹7 LPA" },
+      { id: 'cloud', title: "Data scientist/Advanced Analytics", company: "CloudEdge", location: "Remote", salary: "₹10 LPA" },
+      { id: 'backend', title: "Devops Engineer", company: "CodeWorks", location: "Bangalore", salary: "₹8 LPA" },
+      { id: 'uiux', title: "Testing Practices", company: "DesignPro", location: "Pune", salary: "₹5 LPA" },
+      { id: 'tester', title: "ERP", company: "QA Labs", location: "Hyderabad", salary: "₹4.5 LPA" },
+      { id: 'data', title: "CRM", company: "DataMind", location: "Delhi", salary: "₹7 LPA" },
+    ];
+
+    const STORAGE_KEY = 'job_portal_applications_v3';
+    let applications = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    function saveApplications() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+    }
+
+    // Navigation
+    const sections = document.querySelectorAll('.section');
+    function showSection(id) {
+      sections.forEach(s => s.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => showSection(btn.dataset.target));
+
+    // Render jobs
+    const jobListEl = document.getElementById('jobList');
+    const jobSelectEl = document.getElementById('jobSelect');
+    function renderJobs() {
+      jobListEl.innerHTML = '';
+      jobSelectEl.innerHTML = '<option value="">-- Choose a job --</option>';
+      JOBS.forEach(j => {
+        jobListEl.innerHTML += `
+          <div class="bg-gray-800 p-4 rounded hover:bg-gray-700">
+            <h3 class="text-xl text-cyan-400 font-semibold">${j.title}</h3>
+            <p>${j.company} — <span class="text-sm text-gray-400">${j.location}</span></p>
+            <p class="text-green-400 font-semibold mt-2">${j.salary}</p>
+            <button data-job="${j.id}" class="apply-now bg-cyan-500 hover:bg-cyan-600 text-sm py-1 px-3 rounded mt-2">Apply</button>
+          </div>`;
+        jobSelectEl.innerHTML += `<option value="${j.id}">${j.title} — ${j.company}</option>`;
+      });
+      jobListEl.querySelectorAll('.apply-now').forEach(btn => btn.onclick = e => {
+        showSection('apply');
+        jobSelectEl.value = e.target.dataset.job;
+        document.getElementById('name').focus();
+      });
+    }
+
+    // Apply
+    const nameEl = document.getElementById('name');
+    const emailEl = document.getElementById('email');
+    const messageEl = document.getElementById('message');
+    const experienceEl = document.getElementById('experience');
+    document.getElementById('applyForm').onsubmit = e => {
+      e.preventDefault();
+      const name = nameEl.value.trim();
+      const email = emailEl.value.trim().toLowerCase();
+      const jobId = jobSelectEl.value;
+      const message = messageEl.value.trim();
+      const experience = experienceEl.value.trim();
+      if (!name || !email || !jobId || !experience) return alert("Fill all required fields!");
+      const job = JOBS.find(j => j.id === jobId);
+      applications.push({
+        id: Date.now(),
+        name,
+        email,
+        jobId,
+        jobTitle: job.title,
+        experience,
+        message,
+        appliedAt: new Date().toISOString()
+      });
+      saveApplications();
+      alert("Application submitted!");
+      e.target.reset();
+      updateAdmin();
+    };
+    document.getElementById('resetApply').onclick = () => applyForm.reset();
+
+    // Admin login
+    const ADMIN_PASS = 'admin';
+    document.getElementById('adminLoginBtn').onclick = () => {
+      if (document.getElementById('adminPass').value === ADMIN_PASS) {
+        document.getElementById('adminLogin').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        renderAdminJobs(); updateAdmin();
+      } else alert("Wrong password!");
+    };
+    document.getElementById('logoutBtn').onclick = () => {
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('adminLogin').classList.remove('hidden');
+    };
+
+    // Admin functions
+    const adminJobsEl = document.getElementById('adminJobs');
+    function renderAdminJobs() {
+      adminJobsEl.innerHTML = '';
+      JOBS.forEach(job => {
+        const count = applications.filter(a => a.jobId === job.id).length;
+        const b = document.createElement('button');
+        b.className = "w-full bg-gray-700 hover:bg-gray-600 p-3 rounded flex justify-between";
+        b.innerHTML = `<span>${job.title} — ${job.company}</span><span>${count}</span>`;
+        b.onclick = () => showApplicants(job.id);
+        adminJobsEl.appendChild(b);
+      });
+    }
+
+    const applicantListBlock = document.getElementById('applicantList');
+    const applicantsTable = document.getElementById('applicantsTable');
+    const selectedJobNameEl = document.getElementById('selectedJobName');
+    function showApplicants(jobId) {
+      const job = JOBS.find(j => j.id === jobId);
+      selectedJobNameEl.textContent = `${job.title} — ${job.company}`;
+      applicantsTable.innerHTML = '';
+      const list = applications.filter(a => a.jobId === jobId);
+      if (list.length === 0) applicantsTable.innerHTML = `<tr><td colspan="8" class="p-3">No applicants yet.</td></tr>`;
+      else list.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2 border-b"><input type="checkbox" class="selectApplicant" data-id="${a.id}"></td>
+          <td class="p-2 border-b">${a.name}</td>
+          <td class="p-2 border-b">${a.email}</td>
+          <td class="p-2 border-b">${a.jobTitle}</td>
+          <td class="p-2 border-b">${a.experience || '0'}</td>
+          <td class="p-2 border-b">${a.message || '—'}</td>
+          <td class="p-2 border-b">${new Date(a.appliedAt).toLocaleString()}</td>
+          <td class="p-2 border-b"><button data-id="${a.id}" class="deleteOne bg-red-500 hover:bg-red-600 text-sm px-2 py-1 rounded">Delete</button></td>`;
+        applicantsTable.appendChild(tr);
+      });
+      applicantListBlock.classList.remove('hidden');
+
+      document.querySelectorAll('.deleteOne').forEach(btn => btn.onclick = e => {
+        const id = Number(e.target.dataset.id);
+        if (confirm("Delete this applicant?")) {
+          applications = applications.filter(a => a.id !== id);
+          saveApplications(); showApplicants(jobId); renderAdminJobs(); updateAdmin();
+        }
+      });
+    }
+
+    document.getElementById('closeApplicants').onclick = () => applicantListBlock.classList.add('hidden');
+    document.getElementById('selectAll').onchange = e => {
+      document.querySelectorAll('.selectApplicant').forEach(cb => cb.checked = e.target.checked);
+    };
+    document.getElementById('deleteSelected').onclick = () => {
+      const checked = [...document.querySelectorAll('.selectApplicant:checked')].map(cb => Number(cb.dataset.id));
+      if (checked.length === 0) return alert("No applicants selected.");
+      if (confirm("Delete selected applicants?")) {
+        applications = applications.filter(a => !checked.includes(a.id));
+        saveApplications();
+        applicantListBlock.classList.add('hidden');
+        renderAdminJobs(); updateAdmin();
+      }
+    };
+
+    function updateAdmin() {
+      document.getElementById('totalJobs').textContent = JOBS.length;
+      document.getElementById('totalApplicants').textContent = applications.length;
+    }
+
+    renderJobs();
+    showSection('home');
+  </script>
+</body>
+</html>
